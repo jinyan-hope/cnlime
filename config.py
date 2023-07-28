@@ -1,0 +1,8 @@
+# config.py
+
+# Telegram Bot Token
+TOKEN = "6562812697:AAGhQV1YM_OjB08L6JbwJiR8QogVMgdxBko"
+ADMIN_IDS = [6295479952, 1457254228]
+
+# API版本
+API_VERSION = "13.7"
