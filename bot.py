@@ -10,12 +10,23 @@ import string
 import pytz
 import logging
 
-# 设置日志级别为DEBUG，并将日志记录到文件
+# 设置日志级别为DEBUG，并将日志同时输出到文件和控制台
 logging.basicConfig(filename='bot.log', level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # 创建一个Logger对象，用于记录日志
 logger = logging.getLogger(__name__)
+
+# 添加控制台处理程序，用于在控制台输出日志
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+
+# 将日志保存为中文
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # 全局变量，用于存储生成的卡密
 global_card_key = None
@@ -132,7 +143,7 @@ def delete_subscription(user_id):
 def start(update: Update, _: CallbackContext) -> None:
     show_buttons(update)
     # 记录/start命令的日志
-    logger.info(f"Received /start command from user {update.message.chat.id}")
+    logger.info(f"用户 {update.message.chat.id} 发送了 /start 命令")
 
 
 # 显示可视化按钮
@@ -144,7 +155,7 @@ def show_buttons(update: Update) -> None:
         ],
         [
             InlineKeyboardButton("查询到期时间", callback_data='check_subscription1'),
-            InlineKeyboardButton("自助购买", url='https://t.me/Lime_68'),
+            InlineKeyboardButton("自助购买", url='https://a.cnqn.cc'),
         ],
         [
             InlineKeyboardButton("联系客服", url='https://t.me/Lime_68'),
@@ -156,11 +167,15 @@ def show_buttons(update: Update) -> None:
     update.message.reply_text('代理更新机器人\n'
                               '30CNY一个月\n'
                               '七天左右更新一次\n'
-                              '代理失效点击更新获取最新链接\n'
-                              '有问题联系客服\n'
+                              '订阅成功后点击/start \n'
+                              '点击更新按钮获取节点 \n'
+                              '节点失效及时更新节点\n'
+                              '节点仅限个人使用\n'
+                              '禁止分享，发现永久拉黑\n'
+                              '定制节点联系客服咨询\n'
                               , reply_markup=reply_markup)
     # 记录按钮显示的日志
-    logger.debug(f"Showing buttons to user {update.message.chat.id}")
+    logger.debug(f"向用户 {update.message.chat.id} 显示了按钮")
 
 
 # 处理按钮点击
@@ -173,44 +188,34 @@ def button_click(update: Update, context: CallbackContext) -> None:
     if query.data == 'validate_subscription':
         query.edit_message_text(text="请输入您的卡密")
         # 记录按钮点击的日志
-        logger.info(f"Button 'validate_subscription' clicked by user {user_id}")
+        logger.info(f"用户 {user_id} 点击了 '订阅' 按钮")
         return WAITING_FOR_CARD_KEY
     elif query.data == 'check_subscription':
         # 检查用户的订阅状态
         expiration_date = get_subscription(user_id)
         if expiration_date:
-            # 已订阅用户，回复 "1"
-            # query.edit_message_text(text=f"您的订阅到期时间：{expiration_date}")
-
-            # 从 dy.txt 文件读取内容
+            # 已订阅用户
             with open('dy.txt', 'r', encoding='utf-8') as file:
                 content = file.read()
-
-            # 发送 dy.txt 文件中的中文内容作为回复
             query.edit_message_text(text=content)
-
-            # query.edit_message_text(text=f"您的订阅到期时间：{expiration_date}")
-
         else:
-            # 未订阅用户，回复 "2"
+            # 未订阅用户
             query.edit_message_text(text="请先进行订阅")
 
 
     elif query.data == 'check_subscription1':
 
         # 检查用户的订阅状态
-
         expiration_date = get_subscription(user_id)
 
         if expiration_date:
             query.edit_message_text(text=f"您的订阅到期时间：{expiration_date}")
-
         else:
-            # 未订阅用户，回复 "2"
+            # 未订阅用户
             query.edit_message_text(text="请先进行订阅")
 
         # 记录按钮点击的日志
-        logger.info(f"Button 'check_subscription' clicked by user {user_id}")
+        logger.info(f"用户 {user_id} 点击了 '查询到期时间' 按钮")
 
 
 # 处理用户输入的卡密
@@ -244,11 +249,11 @@ def handle_card_key(update: Update, context: CallbackContext) -> int:
 
         update.message.reply_text(text=f"订阅成功，订阅至 {new_expiration_date.strftime('%Y-%m-%d %H:%M:%S')}")
         # 记录用户订阅成功的日志
-        logger.info(f"User {user_id} subscribed successfully until {new_expiration_date}")
+        logger.info(f"用户 {user_id} 订阅成功，订阅至 {new_expiration_date}")
     else:
         update.message.reply_text(text="卡密无效或已使用，请联系客服。")
         # 记录卡密无效的日志
-        logger.warning(f"Invalid card key provided by user {user_id}")
+        logger.warning(f"用户 {user_id} 提供了无效的卡密")
     return ConversationHandler.END
 
 
